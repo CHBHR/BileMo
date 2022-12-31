@@ -17,6 +17,11 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
+
 
 class ClientController extends AbstractController
 {
@@ -68,21 +73,22 @@ class ClientController extends AbstractController
     }
 
     #[Route('api/clients/{clientId}/customers', name: 'api_clientCustomers', methods: ('GET'))]
-    public function getClientCustomersList(int $clientId, SerializerInterface $serializer, ClientRepository $clientRepository, CustomerRepository $customerRepository)
+    public function getClientCustomersList(SerializerInterface $serializer, CustomerRepository $customerRepository, Request $request, TagAwareCacheInterface $cache)
     {
-        $data = [];
-        $client = $clientRepository->find($clientId);
-        if ($client) {
-            $customers = $customerRepository->findBy(['client' => $client]);
-            $data[] = $client;
-            if ($customers){
-                $data[] = $customers;
-                $jsonClientCustomers = $serializer->serialize($data, 'json', ['groups' => 'getClientCustomers']);
-                return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
-            }
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-        }
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $idCache = "getClientCustomersList-" . $page . "-" . $limit;
+
+        $jsonClientCustomers = $cache->get(
+            $idCache,
+            function (ItemInterface $item) use ($customerRepository, $page, $limit, $serializer) {
+                $item->tag("clientCustomersCache");
+                $clientCustomers = $customerRepository->findAllWithPagination($page, $limit);
+                return $serializer->serialize($clientCustomers, 'json', ['groups' => 'getClientCustomers']);
+            });
+        
+            return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
     }
 
     #[Route('api/clients/{clientId}/customers/{customerId}', name: 'api_clientCustomerDetail', methods: ('GET'))]
@@ -106,26 +112,16 @@ class ClientController extends AbstractController
 
     #[Route('api/clients/{clientId}/customers/{customerId}', name: 'api_delteClientCustomer', methods:['DELETE'])]
     #[IsGranted('ROLE_CLIENT', message: 'Vous n\'avez pas les droits suffisant pour supprimer un utilisateur')]
-    public function deleteClientCustomer(int $clientId, int $customerId, ClientRepository $clientRepository, CustomerRepository $customerRepository, ManagerRegistry $doctrine): JsonResponse
+    // #[ParamConverter('customer', options: ["mapping" => [" customerId " => "id"]])]
+    #[Entity('customer', options: ['id' => 'customerId'])]
+    public function deleteClientCustomer(ManagerRegistry $doctrine, Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
-        $client = $clientRepository->find($clientId);
-        if ($client) {
-            $customers = $customerRepository->findBy(['client' => $client]);
-            if ($customers){
-                $customer = $customerRepository->find($customerId);
-                if ($customer) {
+        $cachePool->invalidateTags(["clientCustomersCache"]);
+        $em = $doctrine->getManager();
+        $em->remove($customer);
+        $em->flush();
 
-                    $em = $doctrine->getManager();
-                    $em->remove($customer);
-                    $em->flush();
-
-                    return new JsonResponse(null, Response::HTTP_NO_CONTENT);
-                }
-                return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-            }
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-        }
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     #[Route('api/clients/{clientId}/customers', name: 'api_createClientCustomer', methods:['POST'])]
@@ -146,8 +142,6 @@ class ClientController extends AbstractController
         $em->flush();
 
         $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => ['customer', 'client']], true);
-
-        //location?
 
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }
