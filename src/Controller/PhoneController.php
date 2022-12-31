@@ -14,14 +14,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class PhoneController extends AbstractController
 {
     #[Route('/api/phones', name: 'api_phone', methods: ['GET'])]
-    public function getPhoneList(PhoneRepository $phoneRepository, SerializerInterface $serializer): JsonResponse
+    public function getPhoneList(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
-        $phoneList = $phoneRepository->findAll();
-        $jsonPhoneList = $serializer->serialize($phoneList, 'json',[ 'groups' => 'getPhones']);
+        // Possibilité d'ajouter des params. dans l'uri (ex ?page=2&limit=2)
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $idCache = "getPhoneList-" . $page . "-" . $limit;
+
+        $jsonPhoneList = $cache->get(
+            $idCache, 
+            function (ItemInterface $item) use ($phoneRepository, $page, $limit, $serializer) {
+                $item->tag("phonesCache");
+                $phoneList = $phoneRepository->findAllWithPagination($page, $limit);
+                return $serializer->serialize($phoneList, 'json',[ 'groups' => 'getPhones']);
+            });
 
         return new JsonResponse($jsonPhoneList, Response::HTTP_OK, [], true);
     }
