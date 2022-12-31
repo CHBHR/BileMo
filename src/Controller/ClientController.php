@@ -6,7 +6,6 @@ use App\Entity\Client;
 use App\Entity\Customer;
 use App\Repository\ClientRepository;
 use App\Repository\CustomerRepository;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,13 +18,14 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 
 
 class ClientController extends AbstractController
 {
     #[Route('/api/clients', name: 'api_client', methods: ['GET'])]
+    #[Cache(expires: 'tomorrow', public: true)]
     public function getClientList(ClientRepository $clientRepository, SerializerInterface $serializer): JsonResponse
     {
         $clientList = $clientRepository->findAll();
@@ -35,6 +35,7 @@ class ClientController extends AbstractController
     }
 
     #[Route('/api/clients/{id}', name: 'api_detailClient', methods: ['GET'])]
+    #[Cache(expires: 'tomorrow', public: true)]
     public function getDetailClient(Client $client, SerializerInterface $serializer): JsonResponse 
     {
         $jsonClient = $serializer->serialize($client, 'json', [ 'groups' => 'getClients']);
@@ -92,27 +93,16 @@ class ClientController extends AbstractController
     }
 
     #[Route('api/clients/{clientId}/customers/{customerId}', name: 'api_clientCustomerDetail', methods: ('GET'))]
-    public function getClientCustomersDetail(int $clientId, int $customerId, SerializerInterface $serializer, ClientRepository $clientRepository, CustomerRepository $customerRepository)
+    #[Entity('customer', options: ['id' => 'customerId'])]
+    public function getClientCustomersDetail(Customer $customer, SerializerInterface $serializer)
     {
-        $client = $clientRepository->find($clientId);
-        if ($client) {
-            $customers = $customerRepository->findBy(['client' => $client]);
-            if ($customers){
-                $customer = $customerRepository->find($customerId);
-                if ($customer) {
-                    $jsonClientCustomers = $serializer->serialize($customer, 'json', ['groups' => 'getClientCustomerDetail']);
-                    return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
-                }
-                return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-            }
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-        }
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+
+        $jsonClientCustomers = $serializer->serialize($customer, 'json', ['groups' => 'getClientCustomerDetail']);
+        return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
     }
 
     #[Route('api/clients/{clientId}/customers/{customerId}', name: 'api_delteClientCustomer', methods:['DELETE'])]
     #[IsGranted('ROLE_CLIENT', message: 'Vous n\'avez pas les droits suffisant pour supprimer un utilisateur')]
-    // #[ParamConverter('customer', options: ["mapping" => [" customerId " => "id"]])]
     #[Entity('customer', options: ['id' => 'customerId'])]
     public function deleteClientCustomer(ManagerRegistry $doctrine, Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
