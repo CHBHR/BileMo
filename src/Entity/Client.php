@@ -6,10 +6,24 @@ use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Hateoas\Configuration\Annotation as Hateoas;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
 
+/**
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailClient", parameters= {"id" = "expr(object.getId())"},), 
+ * exclusion = @Hateoas\Exclusion(groups="getClients"))
+ *  
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_client"), 
+ * exclusion = @Hateoas\Exclusion(groups="getClients"))
+ * 
+ * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClient", parameters= {"id" = "expr(object.getId())"},), 
+ * exclusion = @Hateoas\Exclusion(groups="getClients"))
+ * 
+ * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClient"), 
+ * exclusion = @Hateoas\Exclusion(groups="getClients")) 
+ */
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client implements UserInterface, PasswordAuthenticatedUserInterface
 {

@@ -7,7 +7,6 @@ use App\Repository\PhoneRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,10 +17,12 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
 
 class PhoneController extends AbstractController
 {
-    #[Route('/api/phones', name: 'api_phone', methods: ['GET'])]
+    #[Route('/api/phones', name: 'api_phones', methods: ['GET'])]
     #[OA\Response(
         response: 200,
         description: 'Renvois la liste des phones (produit)',
@@ -45,24 +46,24 @@ class PhoneController extends AbstractController
     #[OA\Tag(name: 'Produits')]
     public function getPhoneList(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
-        // Possibilité d'ajouter des params. dans l'uri (ex ?page=2&limit=2)
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
 
         $idCache = "getPhoneList-" . $page . "-" . $limit;
+        $context = SerializationContext::create()->setGroups(['getPhones']);
 
         $jsonPhoneList = $cache->get(
             $idCache, 
-            function (ItemInterface $item) use ($phoneRepository, $page, $limit, $serializer) {
+            function (ItemInterface $item) use ($phoneRepository, $page, $limit, $serializer, $context) {
                 $item->tag("phonesCache");
                 $phoneList = $phoneRepository->findAllWithPagination($page, $limit);
-                return $serializer->serialize($phoneList, 'json',[ 'groups' => 'getPhones']);
+                return $serializer->serialize($phoneList, 'json',$context);
             });
 
         return new JsonResponse($jsonPhoneList, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/phones/{id}', name: 'api_detailphone', methods: ['GET'])]
+    #[Route('/api/phones/{id}', name: 'api_detailPhone', methods: ['GET'])]
     #[OA\Response(
         response: 200,
         description: 'Renvois le détail d\'un téléphone (produit)',
