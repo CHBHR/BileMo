@@ -36,8 +36,8 @@ class ClientController extends AbstractController
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour consulter la liste des clients')]
     public function getClientList(ClientRepository $clientRepository, SerializerInterface $serializer,TagAwareCacheInterface $cache, Request $request): JsonResponse
     {
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 3);
+        $page = (int) $request->get('page', 1);
+        $limit = (int) $request->get('limit', 3);
 
         $idCache = "getClientsList-" . $page . "-" . $limit;
         $context = SerializationContext::create()->setGroups(['getClients']);

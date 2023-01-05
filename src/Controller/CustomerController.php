@@ -48,8 +48,8 @@ class CustomerController extends AbstractController
     #[OA\Tag(name: 'Customer')]
     public function getCustomerList(CustomerRepository $customerRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 3);
+        $page = (int) $request->get('page', 1);
+        $limit = (int) $request->get('limit', 3);
 
         $idCache = "getCustomerList-" . $page . "-" . $limit;
         $context = SerializationContext::create()->setGroups(['getCustomer']);

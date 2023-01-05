@@ -46,8 +46,8 @@ class PhoneController extends AbstractController
     #[OA\Tag(name: 'Produits')]
     public function getPhoneList(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 3);
+        $page = (int) $request->get('page', 1);
+        $limit = (int) $request->get('limit', 3);
 
         $idCache = "getPhoneList-" . $page . "-" . $limit;
         $context = SerializationContext::create()->setGroups(['getPhones']);
