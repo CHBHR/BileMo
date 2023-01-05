@@ -4,8 +4,28 @@ namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailCustomer", parameters= {"id" = "expr(object.getId())"},), 
+ * exclusion = @Hateoas\Exclusion(groups="getCustomers"))
+ * 
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_clientCustomerDetail", parameters= {"clientId" = "expr(object.getId())","customerId" = "expr(object.getId())"}), 
+ * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
+ *  
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_customer"), 
+ * exclusion = @Hateoas\Exclusion(groups="getCustomers"))
+ * 
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_clientCustomers", parameters= {"clientId" = "expr(object.getId())"}), 
+ * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
+ * 
+ * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClientCustomer", parameters= {"clientId" = "expr(object.getId())","customerId" = "expr(object.getId())"}), 
+ * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
+ * 
+ * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClientCustomer", parameters= {"clientId" = "expr(object.getId())"}), 
+ * exclusion = @Hateoas\Exclusion(groups="getClientCustomers")) 
+ */
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
 {
