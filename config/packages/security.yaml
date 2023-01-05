@@ -41,6 +41,7 @@ security:
 
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_CLIENT }
     #    - { path: ^/api/clients, roles: [ROLE_CLIENT, ROLE_ADMIN], methods: [GET] }
     #    - { path: ^/api/clients, roles: ROLE_ADMIN , methods: [POST, PUT, DELETE] }
