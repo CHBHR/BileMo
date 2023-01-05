@@ -58,7 +58,7 @@ php bin/console doctrine:fixtures:load
 ```
 
 ## Resources 
-The API documentation is available at [Bilemo Documentation](INSERT HERE). 
+The API documentation is available at [Bilemo Documentation](https://127.0.0.1:8000/api/doc). 
 
 Diagrams can be found in the 'ressources' file
 
