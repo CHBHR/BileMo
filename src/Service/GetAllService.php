@@ -10,7 +10,19 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class GetAllService
 {
-    public function getAll(string $name, array $groups, $repository, string $cacheName, Request $request, TagAwareCacheInterface $cache,SerializerInterface $serializer)
+    public $request;
+
+    public $cache;
+
+    public $serializer;
+
+    public function __construct(TagAwareCacheInterface $cache,SerializerInterface $serializer)
+    {
+        $this->cache = $cache;
+        $this->serializer = $serializer;
+    }
+
+    public function getAll(string $name, array $groups, $repository, string $cacheName, $request)
     {
         $page = (int) $request->get('page', 1);
         $limit = (int) $request->get('limit', 3);
@@ -18,12 +30,13 @@ class GetAllService
         $idCache = $name ."-" . $page . "-" . $limit;
         $context = SerializationContext::create()->setGroups($groups);
 
-        return $cache->get(
+        $seri = $this->serializer;
+        return $this->cache->get(
             $idCache, 
-            function (ItemInterface $item) use ($repository, $page, $limit, $serializer, $context, $cacheName) {
+            function (ItemInterface $item) use ($repository, $page, $limit, $seri, $context, $cacheName) {
                 $item->tag($cacheName);
                 $list = $repository->findAllWithPagination($page, $limit);
-                return $serializer->serialize($list, 'json',$context);
+                return $seri->serialize($list, 'json',$context);
             });
     }
 }

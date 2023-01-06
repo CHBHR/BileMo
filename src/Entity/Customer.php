@@ -11,20 +11,20 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailCustomer", parameters= {"id" = "expr(object.getId())"},), 
  * exclusion = @Hateoas\Exclusion(groups="getCustomers"))
  * 
- * @Hateoas\Relation("self", href = @Hateoas\Route( "api_clientCustomerDetail", parameters= {"clientId" = "expr(object.getId())","customerId" = "expr(object.getId())"}), 
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_clientCustomerDetail", parameters= {"clientId" = "expr(object.getClient().getId())","customerId" = "expr(object.getId())"}), 
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
  *  
  * @Hateoas\Relation("list", href = @Hateoas\Route( "api_customer"), 
  * exclusion = @Hateoas\Exclusion(groups="getCustomers"))
  * 
- * @Hateoas\Relation("list", href = @Hateoas\Route( "api_clientCustomers", parameters= {"clientId" = "expr(object.getId())"}), 
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_clientCustomers", parameters= {"clientId" = "expr(object.getClient().getId())"}), 
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
  * 
- * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClientCustomer", parameters= {"clientId" = "expr(object.getId())","customerId" = "expr(object.getId())"}), 
+ * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClientCustomer", parameters= {"clientId" = "expr(object.getClient().getId())","customerId" = "expr(object.getId())"}), 
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
  * 
- * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClientCustomer", parameters= {"clientId" = "expr(object.getId())"}), 
- * exclusion = @Hateoas\Exclusion(groups="getClientCustomers")) 
+ * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClientCustomer", parameters= {"clientId" = "expr(object.getClient().getId())"}), 
+ * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
  */
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
@@ -32,11 +32,11 @@ class Customer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getCustomer", 'getClientCustomers', 'getClientCustomerDetail', 'customer'])]
+    #[Groups(["getCustomers", 'getClientCustomers', 'getClientCustomerDetail', 'customer'])]
     private ?int $id = null;
     
     #[ORM\Column(length: 50, unique: true)]
-    #[Groups(["getCustomer", 'getClientCustomerDetail', 'customer'])]
+    #[Groups(["getCustomers", 'getClientCustomerDetail', 'customer'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 50)]
@@ -50,7 +50,7 @@ class Customer
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\ManyToOne(inversedBy: 'customers')]
+    #[ORM\ManyToOne(inversedBy: 'customer')]
     #[ORM\JoinColumn(nullable: false)]
     private ?client $client = null;
 

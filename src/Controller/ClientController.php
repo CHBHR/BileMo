@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Client;
 use App\Repository\ClientRepository;
+use App\Service\DeleteService;
 use App\Service\GetAllService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -19,7 +20,6 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use OpenApi\Attributes as OA;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
-use Symfony\Contracts\Cache\ItemInterface;
 
 class ClientController extends AbstractController
 {
@@ -32,17 +32,16 @@ class ClientController extends AbstractController
             )
             )]
     #[OA\Tag(name: 'Client')]
-    #[Cache(expires: 'tomorrow', public: true)]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour consulter la liste des clients')]
     #[Route('/api/clients', name: 'api_client', methods: ['GET'])]
-    public function getClientList(ClientRepository $clientRepository, SerializerInterface $serializer,TagAwareCacheInterface $cache, Request $request, GetAllService $getAll): JsonResponse
+    public function getClientList(ClientRepository $clientRepository, Request $request, GetAllService $getAll): JsonResponse
     {
 
         $name = 'getClientList';
         $groups = ['getClients'];
         $cacheName = 'clientsCache';
 
-        $jsonClientList = $getAll->getAll($name, $groups, $clientRepository, $cacheName, $request, $cache, $serializer);
+        $jsonClientList = $getAll->getAll($name, $groups, $clientRepository, $cacheName, $request);
 
         return new JsonResponse($jsonClientList, Response::HTTP_OK, [], true);
  
@@ -75,16 +74,15 @@ class ClientController extends AbstractController
             type: 'array',
             items: new OA\Items(ref: new Model(type: Client::class, groups: []))
             )
-            )]
-            #[OA\Tag(name: 'Client')]
+    )]
+    #[OA\Tag(name: 'Client')]
     #[Route('/api/clients/{id}', name: 'api_deleteClient', methods:['DELETE'])]
-    public function deleteClient(Client $client, ManagerRegistry $doctrine): JsonResponse
+    public function deleteClient(Client $client,DeleteService $delete): JsonResponse
     {
-            $em = $doctrine->getManager();
-            $em->remove($client);
-            $em->flush();
+        $cacheName = ["clientsCache"];
+        $delete->delete($cacheName, $client);
 
-            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour créer un client')]
@@ -95,7 +93,7 @@ class ClientController extends AbstractController
             type: 'array',
             items: new OA\Items(ref: new Model(type: Client::class, groups: []))
             )
-            )]
+        )]
     #[OA\Tag(name: 'Client')]
     #[Route('/api/clients', name:'api_createClient', methods: ['POST'])]
     public function createClient(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse

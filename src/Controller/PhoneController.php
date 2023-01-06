@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Controller\AbstractApiController;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
+use App\Service\DeleteService;
 use App\Service\GetAllService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -46,13 +47,13 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Produits')]
     #[Route('/api/phones', name: 'api_phones', methods: ['GET'])]
-    public function getPhoneList(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache, GetAllService $getAll): JsonResponse
+    public function getPhoneList(PhoneRepository $phoneRepository, Request $request, GetAllService $getAll): JsonResponse
     {
         $name = 'getPhoneList';
         $groups = ['getPhones'];
         $cacheName = 'phonesCache';
 
-        $jsonPhoneList = $getAll->getAll($name, $groups, $phoneRepository, $cacheName, $request, $cache, $serializer);
+        $jsonPhoneList = $getAll->getAll($name, $groups, $phoneRepository, $cacheName, $request);
 
         return new JsonResponse($jsonPhoneList, Response::HTTP_OK, [], true);
     }
@@ -84,11 +85,10 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Produits')]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour supprimer un produit')]
-    public function deletePhone(Phone $phone, ManagerRegistry $doctrine): JsonResponse
+    public function deletePhone(Phone $phone, DeleteService $delete): JsonResponse
     {
-        $em = $doctrine->getManager();
-        $em->remove($phone);
-        $em->flush();
+        $cacheName = ["phonesCache"];
+        $delete->delete($cacheName, $phone);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }

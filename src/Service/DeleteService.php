@@ -7,10 +7,22 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class DeleteService
 {
-    public function delete(array $cacheName, $entity,TagAwareCacheInterface $cachePool, EntityManagerInterface $em)
+    public $em;
+
+    public $cachePool;
+
+    public function __construct(EntityManagerInterface $em, TagAwareCacheInterface $cachePool)
     {
-        $cachePool->invalidateTags($cacheName);
-        $em->remove($entity);
-        $em->flush();
+        $this->em = $em;
+        $this->cachePool = $cachePool;
+    }
+
+    public function delete(array $cacheName, $entity)
+    {
+        if($cacheName){
+            $this->cachePool->invalidateTags($cacheName);
+        }
+        $this->em->remove($entity);
+        $this->em->flush();
     }
 }

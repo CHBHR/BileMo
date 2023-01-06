@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Repository\ClientRepository;
 use App\Repository\CustomerRepository;
+use App\Service\DeleteService;
 use App\Service\GetAllService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,7 +15,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -22,6 +22,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\expr;
 
 class CustomerController extends AbstractController
 {
@@ -47,13 +48,13 @@ class CustomerController extends AbstractController
         )]
     #[OA\Tag(name: 'Customer')]
     #[Route('/api/customers', name: 'api_customer', methods: ['GET'])]
-    public function getCustomerList(CustomerRepository $customerRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache, GetAllService $getAll): JsonResponse
+    public function getCustomerList(CustomerRepository $customerRepository, Request $request, GetAllService $getAll): JsonResponse
     {
         $name = 'getCustomerList';
         $groups = ['getCustomers'];
         $cacheName = 'customerCache';
 
-        $jsonCustomerList = $getAll->getAll($name, $groups, $customerRepository, $cacheName, $request, $cache, $serializer);
+        $jsonCustomerList = $getAll->getAll($name, $groups, $customerRepository, $cacheName, $request);
 
         return new JsonResponse($jsonCustomerList, Response::HTTP_OK, [], true);
     }
@@ -63,26 +64,26 @@ class CustomerController extends AbstractController
         description: 'Renvois le détail d\'un customers (utilisateurs)',
         content: new OA\JsonContent(
             type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomer']))
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomers']))
             )
-            )]
+        )]
     #[OA\Tag(name: 'Customer')]
     #[Route('/api/customers/{id}', name: 'api_detailCustomer', methods: ['GET'])]
     public function getDetailCustomer(Customer $customer, SerializerInterface $serializer): JsonResponse 
     {
-        $context = SerializationContext::create()->setGroups(['getCustomer']);
+        $context = SerializationContext::create()->setGroups(['getCustomers']);
         $jsonCustomer = $serializer->serialize($customer, 'json', $context);
         return new JsonResponse($jsonCustomer, Response::HTTP_OK, ['accept' => 'json'], true);
-   }
+    }
 
-   #[OA\Response(
-       response: 200,
-       description: 'Renvois la liste des customers (utilisateurs) lié à un client',
-       content: new OA\JsonContent(
-           type: 'array',
-           items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getClientCustomers']))
-           )
-           )]
+    #[OA\Response(
+        response: 200,
+        description: 'Renvois la liste des customers (utilisateurs) lié à un client',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getClientCustomers']))
+            )
+            )]
     #[OA\Parameter(
         name: 'page',
         in: 'query',
@@ -96,27 +97,34 @@ class CustomerController extends AbstractController
         schema: new OA\Schema(type:'int')
         )]
     #[OA\Tag(name: 'ClientCustomer')]
-    #[Entity('client', options: ['id' => 'clientId'])]
+    #[Entity('client', expr: 'repository.find(clientId)')]
     #[Route('api/clients/{clientId}/customers', name: 'api_clientCustomers', methods: ('GET'))]
-    public function getClientCustomersList(SerializerInterface $serializer, CustomerRepository $customerRepository, Request $request, TagAwareCacheInterface $cache, GetAllService $getAll)
-   {
-        $name = 'getClientCustomersList';
-        $groups = ['getClientCustomers'];
-        $cacheName = 'clientCustomersCache';
+    public function getClientCustomersList(SerializerInterface $serializer, CustomerRepository $customerRepository, Request $request, ClientRepository $clientRepository)
+    {
+        $data = [];
+        $client = $clientRepository->find($request->get('clientId'));
+        if ($client) {
+            $customers = $customerRepository->findBy(['client' => $client]);
+            $data[] = $client;
+            if ($customers){
+                $data[] = $customers;
+                $context = SerializationContext::create()->setGroups(['getClientCustomers']);
+                $jsonClientCustomers = $serializer->serialize($data, 'json', $context);
+                return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
+            }
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+    }
 
-        $jsonClientCustomers = $getAll->getAll($name, $groups, $customerRepository, $cacheName, $request, $cache, $serializer);
-       
-        return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
-   }
-
-   #[OA\Response(
-       response: 200,
-       description: 'Renvois le détail d\'un customer (utilisateurs) lié à un client',
-       content: new OA\JsonContent(
-           type: 'array',
-           items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getClientCustomerDetail']))
-           )
-           )]
+    #[OA\Response(
+        response: 200,
+        description: 'Renvois le détail d\'un customer (utilisateurs) lié à un client',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getClientCustomerDetail']))
+            )
+            )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('client', options: ['id' => 'clientId'])]
     #[Entity('customer', options: ['id' => 'customerId'])]
@@ -128,24 +136,22 @@ class CustomerController extends AbstractController
         return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
     }
 
-   #[IsGranted('ROLE_CLIENT', message: 'Vous n\'avez pas les droits suffisant pour supprimer un utilisateur')]
-   #[OA\Response(
-       response: 204,
-       description: 'Supprime le customer (utilisateur) lié à un client',
-       content: new OA\JsonContent(
-           type: 'array',
-           items: new OA\Items(ref: new Model(type: Customer::class, groups: []))
-           )
-           )]
+    #[IsGranted('ROLE_CLIENT', message: 'Vous n\'avez pas les droits suffisant pour supprimer un utilisateur')]
+    #[OA\Response(
+        response: 204,
+        description: 'Supprime le customer (utilisateur) lié à un client',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: []))
+            )
+            )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('customer', options: ['id' => 'customerId'])]
     #[Route('api/clients/{clientId}/customers/{customerId}', name: 'api_deleteClientCustomer', methods:['DELETE'])]
-    public function deleteClientCustomer(ManagerRegistry $doctrine, Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
+    public function deleteClientCustomer(Customer $customer, DeleteService $delete): JsonResponse
     {
-        $cachePool->invalidateTags(["clientCustomersCache"]);
-        $em = $doctrine->getManager();
-        $em->remove($customer);
-        $em->flush();
+        $cacheName = ["clientCustomersCache"];
+        $delete->delete($cacheName, $customer);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
@@ -161,24 +167,24 @@ class CustomerController extends AbstractController
            )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Route('api/clients/{clientId}/customers', name: 'api_createClientCustomer', methods:['POST'])]
-   public function createClientCustomer(int $clientId, SerializerInterface $serializer, Request $request, ValidatorInterface $validator, ClientRepository $clientRepository, EntityManagerInterface $em)
-   {
-       $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
+    public function createClientCustomer(int $clientId, SerializerInterface $serializer, Request $request, ValidatorInterface $validator, ClientRepository $clientRepository, EntityManagerInterface $em)
+    {
+        $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
 
-       $errors = $validator->validate($customer);
-       if ($errors->count() > 0) {
-           return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
-       }
+        $errors = $validator->validate($customer);
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
-       $customer->setClient($clientRepository->find($clientId));
-       $customer->setRoles(['ROLE_USER']);
+        $customer->setClient($clientRepository->find($clientId));
+        $customer->setRoles(['ROLE_USER']);
 
-       $em->persist($customer);
-       $em->flush();
+        $em->persist($customer);
+        $em->flush();
 
-       $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => ['customer', 'client']], true);
+        $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => ['customer', 'client']], true);
 
-       return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
-   }
+        return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
+    }
 
 }
