@@ -57,6 +57,10 @@ Once your database has been properly set up, you can load the data fixtures:
 php bin/console doctrine:fixtures:load
 ```
 
+## API doc
+
+The API documentation is accessible via GET /api/doc and is set up using NelmioApiDocBundle
+
 ## Resources 
 The API documentation is available at [Bilemo Documentation](https://127.0.0.1:8000/api/doc). 
 
