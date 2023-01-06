@@ -1,4 +1,4 @@
-# BileMo API
+# BileMo API [![Codacy Badge](https://app.codacy.com/project/badge/Grade/f056577d245e46c1b8099e9fd998225e)](https://www.codacy.com/gh/CHBHR/BileMo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CHBHR/BileMo&amp;utm_campaign=Badge_Grade)
 P07-Openclassrooms_développeur_application_PHP_Symfony
 
 BileMo is a web service that exposes an API allowing clients to access BileMo's mobile phone selections. 
@@ -71,6 +71,10 @@ The different issues can be found on [Github](https://github.com/CHBHR/BileMo/is
 ## Versioning
 
 I used [GitHub](https://github.com/CHBHR/BileMo) for versioning. 
+
+## Code Analysis
+
+Done with Codacy
 
 ## Authors
 
