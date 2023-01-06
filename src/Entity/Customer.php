@@ -8,22 +8,22 @@ use JMS\Serializer\Annotation\Groups;
 use Hateoas\Configuration\Annotation as Hateoas;
 
 /**
- * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailCustomer", parameters= {"id" = "expr(object.getId())"},), 
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailCustomer", parameters= {"id" = "expr(object.getId())"},),
  * exclusion = @Hateoas\Exclusion(groups="getCustomers"))
- * 
- * @Hateoas\Relation("self", href = @Hateoas\Route( "api_clientCustomerDetail", parameters= {"clientId" = "expr(object.getClient().getId())","customerId" = "expr(object.getId())"}), 
+ *
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_clientCustomerDetail", parameters= {"clientId" = "expr(object.getClient().getId())","customerId" = "expr(object.getId())"}),
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
- *  
- * @Hateoas\Relation("list", href = @Hateoas\Route( "api_customer"), 
+ *
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_customer"),
  * exclusion = @Hateoas\Exclusion(groups="getCustomers"))
- * 
- * @Hateoas\Relation("list", href = @Hateoas\Route( "api_clientCustomers", parameters= {"clientId" = "expr(object.getClient().getId())"}), 
+ *
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_clientCustomers", parameters= {"clientId" = "expr(object.getClient().getId())"}),
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
- * 
- * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClientCustomer", parameters= {"clientId" = "expr(object.getClient().getId())","customerId" = "expr(object.getId())"}), 
+ *
+ * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClientCustomer", parameters= {"clientId" = "expr(object.getClient().getId())","customerId" = "expr(object.getId())"}),
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
- * 
- * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClientCustomer", parameters= {"clientId" = "expr(object.getClient().getId())"}), 
+ *
+ * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClientCustomer", parameters= {"clientId" = "expr(object.getClient().getId())"}),
  * exclusion = @Hateoas\Exclusion(groups="getClientCustomers"))
  */
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
@@ -34,7 +34,7 @@ class Customer
     #[ORM\Column]
     #[Groups(["getCustomers", 'getClientCustomers', 'getClientCustomerDetail', 'customer'])]
     private ?int $id = null;
-    
+
     #[ORM\Column(length: 50, unique: true)]
     #[Groups(["getCustomers", 'getClientCustomerDetail', 'customer'])]
     private ?string $email = null;
@@ -124,5 +124,4 @@ class Customer
 
         return $this;
     }
-
 }

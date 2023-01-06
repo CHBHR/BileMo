@@ -68,7 +68,7 @@ class PhoneController extends AbstractController
         )
     )]
     #[OA\Tag(name: 'Produits')]
-    public function getDetailPhone(Phone $phone, SerializerInterface $serializer): JsonResponse 
+    public function getDetailPhone(Phone $phone, SerializerInterface $serializer): JsonResponse
     {
         $jsonPhone = $serializer->serialize($phone, 'json');
         return new JsonResponse($jsonPhone, Response::HTTP_OK, ['accept' => 'json'], true);

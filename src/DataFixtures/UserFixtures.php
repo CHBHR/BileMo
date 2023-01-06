@@ -11,7 +11,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class UserFixtures extends Fixture
 {
     private $userPasswordHasher;
-    
+
     public function __construct(UserPasswordHasherInterface $userPasswordHasher)
     {
         $this->userPasswordHasher = $userPasswordHasher;
@@ -30,7 +30,7 @@ class UserFixtures extends Fixture
         $client1->setPassword($this->userPasswordHasher->hashPassword($client1, "password"));
         $manager->persist($client1);
         for ($i = 0; $i < 5; $i++) {
-            $customer = new Customer;
+            $customer = new Customer();
             $customer->setEmail($client1->getName() . '.customer'. $i . '@gmail.com');
             $customer->setFirstName($client1->getName() . '\'s customer ' . $i);
             $customer->setLastName('Doe');
@@ -45,7 +45,7 @@ class UserFixtures extends Fixture
         $client2->setPassword($this->userPasswordHasher->hashPassword($client2, "password"));
         $manager->persist($client2);
         for ($i = 0; $i < 5; $i++) {
-            $customer = new Customer;
+            $customer = new Customer();
             $customer->setEmail($client2->getName() . '.customer'. $i . '@gmail.com');
             $customer->setFirstName($client2->getName() . '\'s customer ' . $i);
             $customer->setLastName('Doe');
@@ -60,7 +60,7 @@ class UserFixtures extends Fixture
         $client3->setPassword($this->userPasswordHasher->hashPassword($client3, "password"));
         $manager->persist($client3);
         for ($i = 0; $i < 5; $i++) {
-            $customer = new Customer;
+            $customer = new Customer();
             $customer->setEmail($client3->getName() . '.customer'. $i . '@gmail.com');
             $customer->setFirstName($client3->getName() . '\'s customer ' . $i);
             $customer->setLastName('Doe');
@@ -70,7 +70,5 @@ class UserFixtures extends Fixture
         }
 
         $manager->flush();
-
     }
-
 }

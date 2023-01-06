@@ -16,7 +16,7 @@ class GetAllService
 
     public $serializer;
 
-    public function __construct(TagAwareCacheInterface $cache,SerializerInterface $serializer)
+    public function __construct(TagAwareCacheInterface $cache, SerializerInterface $serializer)
     {
         $this->cache = $cache;
         $this->serializer = $serializer;
@@ -32,11 +32,12 @@ class GetAllService
 
         $seri = $this->serializer;
         return $this->cache->get(
-            $idCache, 
+            $idCache,
             function (ItemInterface $item) use ($repository, $page, $limit, $seri, $context, $cacheName) {
                 $item->tag($cacheName);
                 $list = $repository->findAllWithPagination($page, $limit);
-                return $seri->serialize($list, 'json',$context);
-            });
+                return $seri->serialize($list, 'json', $context);
+            }
+        );
     }
 }
