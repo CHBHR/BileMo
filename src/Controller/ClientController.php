@@ -7,7 +7,6 @@ use App\Repository\ClientRepository;
 use App\Service\DeleteService;
 use App\Service\GetAllService;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use OpenApi\Attributes as OA;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
@@ -29,14 +27,13 @@ class ClientController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Client::class, groups: ['getClients']))
-            )
-            )]
+        )
+    )]
     #[OA\Tag(name: 'Client')]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour consulter la liste des clients')]
     #[Route('/api/clients', name: 'api_client', methods: ['GET'])]
     public function getClientList(ClientRepository $clientRepository, Request $request, GetAllService $getAll): JsonResponse
     {
-
         $name = 'getClientList';
         $groups = ['getClients'];
         $cacheName = 'clientsCache';
@@ -44,7 +41,6 @@ class ClientController extends AbstractController
         $jsonClientList = $getAll->getAll($name, $groups, $clientRepository, $cacheName, $request);
 
         return new JsonResponse($jsonClientList, Response::HTTP_OK, [], true);
- 
     }
 
     #[OA\Response(
@@ -53,13 +49,13 @@ class ClientController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Client::class, groups: []))
-            )
-            )]
+        )
+    )]
     #[OA\Tag(name: 'Client')]
     #[Cache(expires: 'tomorrow', public: true)]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour consulter les informations d\'un clients')]
     #[Route('/api/clients/{id}', name: 'api_detailClient', methods: ['GET'])]
-    public function getDetailClient(Client $client, SerializerInterface $serializer): JsonResponse 
+    public function getDetailClient(Client $client, SerializerInterface $serializer): JsonResponse
     {
         $context = SerializationContext::create()->setGroups(['getClients']);
         $jsonClient = $serializer->serialize($client, 'json', $context);
@@ -73,11 +69,11 @@ class ClientController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Client::class, groups: []))
-            )
+        )
     )]
     #[OA\Tag(name: 'Client')]
     #[Route('/api/clients/{id}', name: 'api_deleteClient', methods:['DELETE'])]
-    public function deleteClient(Client $client,DeleteService $delete): JsonResponse
+    public function deleteClient(Client $client, DeleteService $delete): JsonResponse
     {
         $cacheName = ["clientsCache"];
         $delete->delete($cacheName, $client);
@@ -92,8 +88,8 @@ class ClientController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Client::class, groups: []))
-            )
-        )]
+        )
+    )]
     #[OA\Tag(name: 'Client')]
     #[Route('/api/clients', name:'api_createClient', methods: ['POST'])]
     public function createClient(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
@@ -113,5 +109,4 @@ class ClientController extends AbstractController
 
         return new JsonResponse($jsonClient, Response::HTTP_CREATED);
     }
-
 }

@@ -19,7 +19,7 @@ class DeleteService
 
     public function delete(array $cacheName, $entity)
     {
-        if($cacheName){
+        if ($cacheName) {
             $this->cachePool->invalidateTags($cacheName);
         }
         $this->em->remove($entity);

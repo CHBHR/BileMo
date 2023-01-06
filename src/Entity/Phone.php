@@ -9,14 +9,14 @@ use JMS\Serializer\Annotation\Groups;
 use Hateoas\Configuration\Annotation as Hateoas;
 
 /**
- * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailPhone", parameters= {"id" = "expr(object.getId())"},), 
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailPhone", parameters= {"id" = "expr(object.getId())"},),
  * exclusion = @Hateoas\Exclusion(groups="getPhones"))
- *  
- * @Hateoas\Relation("list", href = @Hateoas\Route( "api_phones"), 
+ *
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_phones"),
  * exclusion = @Hateoas\Exclusion(groups="getPhones"))
- * 
- * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deletePhone", parameters= {"id" = "expr(object.getId())"},), 
- * exclusion = @Hateoas\Exclusion(groups="getPhones"))  
+ *
+ * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deletePhone", parameters= {"id" = "expr(object.getId())"},),
+ * exclusion = @Hateoas\Exclusion(groups="getPhones"))
  */
 #[ORM\Entity(repositoryClass: PhoneRepository::class)]
 class Phone
@@ -94,5 +94,4 @@ class Phone
 
         return $this;
     }
-    
 }

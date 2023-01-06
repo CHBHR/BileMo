@@ -22,6 +22,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 use function Symfony\Component\DependencyInjection\Loader\Configurator\expr;
 
 class CustomerController extends AbstractController
@@ -32,20 +33,20 @@ class CustomerController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomers']))
-            )
-            )]
+        )
+    )]
     #[OA\Parameter(
         name: 'page',
         in: 'query',
         description: 'La page que l\'on veux récupérer',
         schema: new OA\Schema(type:'int')
-        )]
+    )]
     #[OA\Parameter(
         name: 'limit',
         in: 'query',
         description: 'Le nombre d\'éléments que l\'on veux récupérer',
         schema: new OA\Schema(type:'int')
-        )]
+    )]
     #[OA\Tag(name: 'Customer')]
     #[Route('/api/customers', name: 'api_customer', methods: ['GET'])]
     public function getCustomerList(CustomerRepository $customerRepository, Request $request, GetAllService $getAll): JsonResponse
@@ -58,18 +59,18 @@ class CustomerController extends AbstractController
 
         return new JsonResponse($jsonCustomerList, Response::HTTP_OK, [], true);
     }
-    
+
     #[OA\Response(
         response: 200,
         description: 'Renvois le détail d\'un customers (utilisateurs)',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomers']))
-            )
-        )]
+        )
+    )]
     #[OA\Tag(name: 'Customer')]
     #[Route('/api/customers/{id}', name: 'api_detailCustomer', methods: ['GET'])]
-    public function getDetailCustomer(Customer $customer, SerializerInterface $serializer): JsonResponse 
+    public function getDetailCustomer(Customer $customer, SerializerInterface $serializer): JsonResponse
     {
         $context = SerializationContext::create()->setGroups(['getCustomers']);
         $jsonCustomer = $serializer->serialize($customer, 'json', $context);
@@ -82,20 +83,20 @@ class CustomerController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getClientCustomers']))
-            )
-            )]
+        )
+    )]
     #[OA\Parameter(
         name: 'page',
         in: 'query',
         description: 'La page que l\'on veux récupérer',
         schema: new OA\Schema(type:'int')
-        )]
+    )]
     #[OA\Parameter(
         name: 'limit',
         in: 'query',
         description: 'Le nombre d\'éléments que l\'on veux récupérer',
         schema: new OA\Schema(type:'int')
-        )]
+    )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('client', expr: 'repository.find(clientId)')]
     #[Route('api/clients/{clientId}/customers', name: 'api_clientCustomers', methods: ('GET'))]
@@ -106,7 +107,7 @@ class CustomerController extends AbstractController
         if ($client) {
             $customers = $customerRepository->findBy(['client' => $client]);
             $data[] = $client;
-            if ($customers){
+            if ($customers) {
                 $data[] = $customers;
                 $context = SerializationContext::create()->setGroups(['getClientCustomers']);
                 $jsonClientCustomers = $serializer->serialize($data, 'json', $context);
@@ -123,8 +124,8 @@ class CustomerController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getClientCustomerDetail']))
-            )
-            )]
+        )
+    )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('client', options: ['id' => 'clientId'])]
     #[Entity('customer', options: ['id' => 'customerId'])]
@@ -143,8 +144,8 @@ class CustomerController extends AbstractController
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: []))
-            )
-            )]
+        )
+    )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('customer', options: ['id' => 'customerId'])]
     #[Route('api/clients/{clientId}/customers/{customerId}', name: 'api_deleteClientCustomer', methods:['DELETE'])]
@@ -158,13 +159,13 @@ class CustomerController extends AbstractController
 
     #[IsGranted('ROLE_CLIENT', message: 'Vous n\'avez pas les droits suffisant pour créer un utilisateur')]
     #[OA\Response(
-       response: 201,
-       description: 'Créer un customer (utilisateur) lié à un client',
-       content: new OA\JsonContent(
-           type: 'array',
-           items: new OA\Items(ref: new Model(type: Customer::class, groups: []))
-           )
-           )]
+        response: 201,
+        description: 'Créer un customer (utilisateur) lié à un client',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: []))
+        )
+    )]
     #[OA\Tag(name: 'ClientCustomer')]
     #[Route('api/clients/{clientId}/customers', name: 'api_createClientCustomer', methods:['POST'])]
     public function createClientCustomer(int $clientId, SerializerInterface $serializer, Request $request, ValidatorInterface $validator, ClientRepository $clientRepository, EntityManagerInterface $em)
@@ -186,5 +187,4 @@ class CustomerController extends AbstractController
 
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }
-
 }

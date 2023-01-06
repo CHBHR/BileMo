@@ -12,17 +12,17 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use JMS\Serializer\Annotation\Groups;
 
 /**
- * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailClient", parameters= {"id" = "expr(object.getId())"},), 
+ * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailClient", parameters= {"id" = "expr(object.getId())"},),
  * exclusion = @Hateoas\Exclusion(groups="getClients"))
- *  
- * @Hateoas\Relation("list", href = @Hateoas\Route( "api_client"), 
+ *
+ * @Hateoas\Relation("list", href = @Hateoas\Route( "api_client"),
  * exclusion = @Hateoas\Exclusion(groups="getClients"))
- * 
- * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClient", parameters= {"id" = "expr(object.getId())"},), 
+ *
+ * @Hateoas\Relation("delete", href = @Hateoas\Route( "api_deleteClient", parameters= {"id" = "expr(object.getId())"},),
  * exclusion = @Hateoas\Exclusion(groups="getClients"))
- * 
- * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClient"), 
- * exclusion = @Hateoas\Exclusion(groups="getClients")) 
+ *
+ * @Hateoas\Relation("post", href = @Hateoas\Route( "api_createClient"),
+ * exclusion = @Hateoas\Exclusion(groups="getClients"))
  */
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client implements UserInterface, PasswordAuthenticatedUserInterface
@@ -121,7 +121,8 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getUsername(): string {
+    public function getUsername(): string
+    {
         return $this->getUserIdentifier();
     }
 
