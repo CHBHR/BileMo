@@ -36,11 +36,9 @@ class ClientController extends AbstractController
     {
         $name = 'getClientList';
         $groups = ['getClients'];
-        $cacheName = 'clientsCache';
+        $tags = ['clientsCache'];
 
-        $jsonClientList = $getAll->getAll($name, $groups, $clientRepository, $cacheName, $request);
-
-        return new JsonResponse($jsonClientList, Response::HTTP_OK, [], true);
+        return $getAll->getAll($name, $groups, $clientRepository, $tags, $request);
     }
 
     #[OA\Response(

@@ -7,23 +7,20 @@ use App\Repository\ClientRepository;
 use App\Repository\CustomerRepository;
 use App\Service\DeleteService;
 use App\Service\GetAllService;
+use App\Service\GetClientCustomerService;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
-use function Symfony\Component\DependencyInjection\Loader\Configurator\expr;
 
 class CustomerController extends AbstractController
 {
@@ -53,11 +50,9 @@ class CustomerController extends AbstractController
     {
         $name = 'getCustomerList';
         $groups = ['getCustomers'];
-        $cacheName = 'customerCache';
+        $tags = ['customerCache'];
 
-        $jsonCustomerList = $getAll->getAll($name, $groups, $customerRepository, $cacheName, $request);
-
-        return new JsonResponse($jsonCustomerList, Response::HTTP_OK, [], true);
+        return $getAll->getAll($name, $groups, $customerRepository, $tags, $request);
     }
 
     #[OA\Response(
@@ -100,21 +95,21 @@ class CustomerController extends AbstractController
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('client', expr: 'repository.find(clientId)')]
     #[Route('api/clients/{clientId}/customers', name: 'api_clientCustomers', methods: ('GET'))]
-    public function getClientCustomersList(SerializerInterface $serializer, CustomerRepository $customerRepository, Request $request, ClientRepository $clientRepository)
+    public function getClientCustomersList(SerializerInterface $serializer, CustomerRepository $customerRepository, Request $request, ClientRepository $clientRepository, GetClientCustomerService $getClientCustomersList)
     {
-        $data = [];
+        $clientId = $request->get('clientId');
         $client = $clientRepository->find($request->get('clientId'));
-        if ($client) {
-            $customers = $customerRepository->findBy(['client' => $client]);
-            $data[] = $client;
-            if ($customers) {
-                $data[] = $customers;
-                $context = SerializationContext::create()->setGroups(['getClientCustomers']);
-                $jsonClientCustomers = $serializer->serialize($data, 'json', $context);
-                return new JsonResponse($jsonClientCustomers, Response::HTTP_OK, [], true);
-            }
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        $customers = $customerRepository->findBy(['client' => $client]);
+        if ($client && $customers) {
+
+            $name = 'getClientCustomersList';
+            $groups = ['getClientCustomers'];
+            $tags = ['clientCustomersCache'];
+    
+            return $getClientCustomersList->getClientCustomerList($name, $groups, $tags, $clientId, $request);
+
         }
+        
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 

@@ -50,7 +50,7 @@ class Customer
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\ManyToOne(inversedBy: 'customer')]
+    #[ORM\ManyToOne(inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
     private ?client $client = null;
 

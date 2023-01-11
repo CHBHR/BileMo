@@ -2,13 +2,11 @@
 
 namespace App\Controller;
 
-use App\Controller\AbstractApiController;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
 use App\Service\DeleteService;
 use App\Service\GetAllService;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,12 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
 use JMS\Serializer\SerializerInterface;
-use JMS\Serializer\SerializationContext;
 
 class PhoneController extends AbstractController
 {
@@ -51,11 +46,10 @@ class PhoneController extends AbstractController
     {
         $name = 'getPhoneList';
         $groups = ['getPhones'];
-        $cacheName = 'phonesCache';
+        $tags = ['phonesCache'];
 
-        $jsonPhoneList = $getAll->getAll($name, $groups, $phoneRepository, $cacheName, $request);
+        return $getAll->getAll($name, $groups, $phoneRepository, $tags, $request);
 
-        return new JsonResponse($jsonPhoneList, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/phones/{id}', name: 'api_detailPhone', methods: ['GET'])]
@@ -87,8 +81,8 @@ class PhoneController extends AbstractController
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour supprimer un produit')]
     public function deletePhone(Phone $phone, DeleteService $delete): JsonResponse
     {
-        $cacheName = ["phonesCache"];
-        $delete->delete($cacheName, $phone);
+        $tags = ["phonesCache"];
+        $delete->delete($tags, $phone);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
