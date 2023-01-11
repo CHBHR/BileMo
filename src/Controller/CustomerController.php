@@ -95,7 +95,7 @@ class CustomerController extends AbstractController
     #[OA\Tag(name: 'ClientCustomer')]
     #[Entity('client', expr: 'repository.find(clientId)')]
     #[Route('api/clients/{clientId}/customers', name: 'api_clientCustomers', methods: ('GET'))]
-    public function getClientCustomersList(SerializerInterface $serializer, CustomerRepository $customerRepository, Request $request, ClientRepository $clientRepository, GetClientCustomerService $getClientCustomersList)
+    public function getClientCustomersList(CustomerRepository $customerRepository, Request $request, ClientRepository $clientRepository, GetClientCustomerService $getClientCustomersList)
     {
         $clientId = $request->get('clientId');
         $client = $clientRepository->find($request->get('clientId'));
@@ -109,7 +109,7 @@ class CustomerController extends AbstractController
             return $getClientCustomersList->getClientCustomerList($name, $groups, $tags, $clientId, $request);
 
         }
-        
+
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
@@ -178,7 +178,9 @@ class CustomerController extends AbstractController
         $em->persist($customer);
         $em->flush();
 
-        $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => ['customer', 'client']], true);
+        $context = SerializationContext::create()->setGroups(['customer', 'client']);
+
+        $jsonCustomer = $serializer->serialize($customer, 'json', $context);
 
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }

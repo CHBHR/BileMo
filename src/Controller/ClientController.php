@@ -105,6 +105,6 @@ class ClientController extends AbstractController
 
         $jsonClient = $serializer->serialize($client, 'json');
 
-        return new JsonResponse($jsonClient, Response::HTTP_CREATED);
+        return new JsonResponse($jsonClient, Response::HTTP_CREATED, [],  true);
     }
 }

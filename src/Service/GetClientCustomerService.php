@@ -70,7 +70,7 @@ class GetClientCustomerService
                 $results = new JsonResponse($jsonList, Response::HTTP_OK, [], true);
 
                 // Cache expires after 10 minutes
-                $item->expiresAfter(2);
+                $item->expiresAfter(600);
                 $item->tag($tags);
 
                 return $results;

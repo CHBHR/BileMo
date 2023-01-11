@@ -25,24 +25,27 @@ class Phone
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(["getPhones"])]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
     #[Groups(["getPhones"])]
     private string $name;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(length: 100)]
+    #[Assert\NotBlank]
     #[Groups(["getPhones"])]
-    private ?string $brand = null;
+    private string $brand;
 
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $os = null;
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank]
+    private string $os;
 
-    #[ORM\Column(length: 25, nullable: true)]
-    private ?string $screenSize = null;
+    #[ORM\Column(length: 25)]
+    #[Assert\NotBlank]
+    private string $screenSize;
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -59,36 +62,36 @@ class Phone
         return $this;
     }
 
-    public function getBrand(): ?string
+    public function getBrand(): string
     {
         return $this->brand;
     }
 
-    public function setBrand(?string $brand): self
+    public function setBrand(string $brand): self
     {
         $this->brand = $brand;
 
         return $this;
     }
 
-    public function getOs(): ?string
+    public function getOs(): string
     {
         return $this->os;
     }
 
-    public function setOs(?string $os): self
+    public function setOs(string $os): self
     {
         $this->os = $os;
 
         return $this;
     }
 
-    public function getScreenSize(): ?string
+    public function getScreenSize(): string
     {
         return $this->screenSize;
     }
 
-    public function setScreenSize(?string $screenSize): self
+    public function setScreenSize(string $screenSize): self
     {
         $this->screenSize = $screenSize;
 

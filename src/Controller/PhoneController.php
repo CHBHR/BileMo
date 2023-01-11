@@ -98,7 +98,7 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Produits')]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour créer un produit')]
-    public function createUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
+    public function createPhone(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $phone = $serializer->deserialize($request->getContent(), Phone::class, 'json');
 
@@ -113,6 +113,6 @@ class PhoneController extends AbstractController
 
         $jsonPhone = $serializer->serialize($phone, 'json');
 
-        return new JsonResponse($jsonPhone, Response::HTTP_CREATED);
+        return new JsonResponse($jsonPhone, Response::HTTP_CREATED, [], true);
     }
 }
