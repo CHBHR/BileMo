@@ -10,6 +10,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use JMS\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailClient", parameters= {"id" = "expr(object.getId())"},),
@@ -31,14 +32,16 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(["getClients"])]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank]
     #[Groups(['getClients','getClientCustomers'])]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column]
-    private ?string $password = null;
+    #[Assert\NotBlank]
+    private string $password;
 
     #[ORM\Column]
     private array $roles = [];
@@ -52,12 +55,12 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
         $this->customers = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -118,7 +121,7 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials()
     {
         // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+        // $this->plainPassword;
     }
 
     public function getUsername(): string

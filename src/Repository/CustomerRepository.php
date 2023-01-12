@@ -46,4 +46,15 @@ class CustomerRepository extends ServiceEntityRepository
             ->setMaxResults($limit);
         return $query->getQuery()->getResult();
     }
+
+    public function findAllFromClientWithPagination($page, $limit, $clientId)
+    {
+        $query = $this->createQueryBuilder('stuff')
+        ->select('c')
+            ->from('App\Entity\Customer', 'c')
+            ->where("c.client = '$clientId'")
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+        return $query->getQuery()->getResult();
+    }
 }

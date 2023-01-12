@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Repository\CustomerRepository;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -9,29 +10,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-class GetAllService
+class GetClientCustomerService
 {
     public $cache;
 
     public $serializer;
 
-    public function __construct(TagAwareCacheInterface $cache, SerializerInterface $serializer)
+    public $customerRepository;
+
+    public function __construct(TagAwareCacheInterface $cache, SerializerInterface $serializer, CustomerRepository $customerRepository)
     {
         $this->cache = $cache;
         $this->serializer = $serializer;
+        $this->customerRepository = $customerRepository;
     }
 
-    /**
-     * @param string $name  Name of the method, used here to create custom cache name for method to check before callback
-     * @param array $groups List of the groups, used with the Hateoas annotations on the entity
-     * @param array $tags   List of the tags used to invalisate cache in case of delete
-     */
-    public function getAll(string $name, array $groups, $repository, array $tags, $request)
+    public function getClientCustomerList(string $name, array $groups, array $tags, $client, $request)
     {
         $page = (int) $request->get('page', 1);
         $limit = (int) $request->get('limit', 3);
 
-        $maxNbrOfResults = count($repository->findAll());
+        $maxNbrOfResults = count($this->customerRepository->findBy(array('client' => $client)));
         $maxNbrOfPages = ceil($maxNbrOfResults/$limit);
 
         if ($page <= 0 || $limit <= 0) {
@@ -45,17 +44,18 @@ class GetAllService
         $idCache = $name . "-" . $page . "-" . $limit;
         
         $seri = $this->serializer;
+        $repository = $this->customerRepository;
 
         return $this->cache->get(
             $idCache,
-            function (ItemInterface $item) use ($repository, $page, $limit, $seri, $tags, $context) 
+            function (ItemInterface $item) use ($repository, $page, $limit, $seri, $tags, $context, $client) 
             {
                 $data = [];
 
-                $list = $repository->findAllWithPagination($page, $limit);
+                $list = $repository->findAllFromClientWithPagination($page, $limit, $client);
                 $data[] = $list;
 
-                $maxNbrOfResults = count($repository->findAll());
+                $maxNbrOfResults = count($repository->findBy(array('client' => $client)));
                 $maxNbrOfPages = ceil($maxNbrOfResults/$limit);
                 $paginationData = [
                     "totalItems" => $maxNbrOfResults,
@@ -77,4 +77,5 @@ class GetAllService
             }
         );
     }
+    
 }

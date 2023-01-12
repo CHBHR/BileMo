@@ -6,6 +6,7 @@ use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
 use Hateoas\Configuration\Annotation as Hateoas;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @Hateoas\Relation("self", href = @Hateoas\Route( "api_detailCustomer", parameters= {"id" = "expr(object.getId())"},),
@@ -33,33 +34,36 @@ class Customer
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(["getCustomers", 'getClientCustomers', 'getClientCustomerDetail', 'customer'])]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\Column(length: 50, unique: true)]
+    #[Assert\NotBlank]
     #[Groups(["getCustomers", 'getClientCustomerDetail', 'customer'])]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank]
     #[Groups(["getClientCustomers", 'getClientCustomerDetail', 'customer'])]
-    private ?string $firstName = null;
+    private string $firstName;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank]
     #[Groups(["getClientCustomers", 'getClientCustomerDetail', 'customer'])]
-    private ?string $lastName = null;
+    private string $lastName;
 
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\ManyToOne(inversedBy: 'customer')]
+    #[ORM\ManyToOne(inversedBy: 'customers')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?client $client = null;
+    private client $client;
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -71,7 +75,7 @@ class Customer
         return $this;
     }
 
-    public function getFirstName(): ?string
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
@@ -83,7 +87,7 @@ class Customer
         return $this;
     }
 
-    public function getLastName(): ?string
+    public function getLastName(): string
     {
         return $this->lastName;
     }
@@ -113,12 +117,12 @@ class Customer
         return $this;
     }
 
-    public function getClient(): ?client
+    public function getClient(): client
     {
         return $this->client;
     }
 
-    public function setClient(?client $client): self
+    public function setClient(client $client): self
     {
         $this->client = $client;
 
