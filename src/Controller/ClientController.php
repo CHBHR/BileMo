@@ -107,4 +107,26 @@ class ClientController extends AbstractController
 
         return new JsonResponse($jsonClient, Response::HTTP_CREATED, [],  true);
     }
+
+    #[OA\Response(
+        response: 204,
+        description: 'Modifier un client',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Client::class, groups: []))
+            )
+        )]
+    #[OA\Tag(name: 'Client')]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisant pour modifier un client')]
+    #[Route('/api/clients/{id}', name:'api_updateClient', methods:['PUT'])]
+    public function updateClient(Request $request, SerializerInterface $serializer, EntityManagerInterface $em): JsonResponse
+    {
+        $updatedClient = $serializer->deserialize($request->getContent(),
+            Client::class,
+            'json',
+        );
+            $em->persist($updatedClient);
+            $em->flush();
+            return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
 }

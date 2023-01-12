@@ -184,4 +184,31 @@ class CustomerController extends AbstractController
 
         return new JsonResponse($jsonCustomer, Response::HTTP_CREATED, [], true);
     }
+
+    #[OA\Response(
+        response: 204,
+        description: 'Modifier un customer',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: []))
+            )
+        )]
+    #[OA\Tag(name: 'Customer')]
+    #[Entity('customer', options: ['id' => 'customerId'])]
+    #[Entity('client', options: ['id' => 'clientId'])]
+    #[IsGranted('ROLE_CLIENT', message: 'Vous n\'avez pas les droits suffisant pour modifier un customer')]
+    #[Route('/api/clients/{clientId}/customers/{customerId}', name:'api_updateCustomer', methods:['PUT'])]
+    public function updateCustomer(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ClientRepository $clientRepository): JsonResponse
+    {
+        $updatedCustomer = $serializer->deserialize($request->getContent(),
+            Customer::class,
+            'json',
+        );
+        $client = $clientRepository->find($request->get('clientId'));
+        $updatedCustomer->setClient($client);
+
+        $em->persist($updatedCustomer);
+        $em->flush();
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
 }
